@@ -1,0 +1,16 @@
+{
+  "name": "fill-in-finder",
+  "version": "1.0.0",
+  "description": "find fill ins automatically for table tennis pennant",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.15.3",
+    "mysql": "^2.13.0",
+    "sprintf-js": "^1.1.1"
+  }
+}
