@@ -27,16 +27,34 @@ function handle_fill_in_request(con, player, cb) {
 		if (err) {
 			throw err;
 		}
-		var find_fillins_sql = sprintf(
-			"SELECT * FROM Player WHERE " + 
-			"Grade='%s' AND Availability='available' AND PlayerID != %s", 
-			player.Grade, player.PlayerID);
-		con.query(find_fillins_sql, function(err, result, fields) {
+		// set requester availability to 'unavailable'
+		var requester_ava = sprintf(
+			"UPDATE Player SET Availability = 'unavailable' " + 
+			"WHERE PlayerID = %s", player.PlayerID);
+		con.query(requester_ava, function(err, result) {
 			if (err) {
 				throw err;
 			}
-			// send everyone an sms
-			cb(result);
+			// get available players of the same grade
+			var where_clause = sprintf(
+				"WHERE Grade='%s' AND Availability='available' AND PlayerID != %s",
+				player.Grade, player.PlayerID);
+			var find_fillins_sql = "SELECT * FROM Player " + where_clause;
+			con.query(find_fillins_sql, function(err, fill_ins, fields) {
+				if (err) {
+					throw err;
+				}
+				// update availability status
+				var update_ava_sql = "UPDATE Player SET Availability = 'request_sent' " + 
+					where_clause;
+				con.query(update_ava_sql, function(err, result) {
+					if (err) {
+						throw err;
+					}
+					// send potential fill ins an sms
+					cb(fill_ins);
+				});
+ 			});
 		});
 	});	
 }
@@ -65,8 +83,18 @@ function handle_fill_in_offer(con, player, cb) {
 				if (err) {
 					throw err;
 				}
-				// confirm with the fill in and the absent person
-				cb(fir, player);
+				// set availability of player offering to fill in as 
+				// unavailable
+				var set_ava = sprintf(
+					"UPDATE Player SET Availability = 'unavailable' WHERE " + 
+					"PlayerID = %s", player.PlayerID);
+				con.query(set_ava, function(err, result) {
+					if (err) {
+						throw err;
+					}
+					// confirm with the fill in and the absent person
+					cb(fir, player);
+				});
 			});
 		} else {
 			console.log("no requests match");
